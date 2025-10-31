@@ -1,0 +1,1 @@
+print("de ce are girafa gatu lung???")
