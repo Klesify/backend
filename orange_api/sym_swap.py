@@ -1,9 +1,20 @@
 from typing import Optional
 import httpx
-from auth import get_access_token
+from .auth import get_access_token
 
 
 async def check_sim_swap(phone_number: str, max_age: Optional[int] = None):
+    """
+    Check if a SIM swap has occurred for the given phone number.
+    
+    Args:
+        phone_number (str): The phone number to check.
+        max_age (int, optional): Maximum age of SIM swap data in hours. Defaults to 240 (10 days). Max value is 2400.
+    
+    Returns:
+        dict: Result of the SIM swap check
+            - swapped (bool): True if a SIM swap has occurred during the checked period, False otherwise
+    """
     # Validate max_age if provided
     if max_age is not None:
         if not isinstance(max_age, int) or max_age < 1 or max_age > 2400:
@@ -68,6 +79,16 @@ async def check_sim_swap(phone_number: str, max_age: Optional[int] = None):
 
 
 async def retrieve_sim_swap_date(phone_number: str, x_correlator: Optional[str] = None) -> dict:
+    """
+    Retrieve the date of the latest SIM swap for the given phone number.
+    
+    Args:
+        phone_number (str): The phone number to check.
+
+    Returns:
+        dict: Result containing the latest SIM swap date
+            - latestSimChange (str): Date of the latest SIM swap in ISO 8601 format (ex: 2024-12-03T08:30:00.000Z)
+    """
     # Get valid OAuth token
     token = await get_access_token()
     

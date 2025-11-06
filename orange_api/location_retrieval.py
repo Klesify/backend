@@ -1,6 +1,6 @@
 from typing import Optional
 import httpx
-from auth import get_access_token
+from .auth import get_access_token
 
 
 async def retrieve_device_location(

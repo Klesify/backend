@@ -1,6 +1,6 @@
 from typing import Optional, Dict, Any
 import httpx
-from auth import get_access_token
+from .auth import get_access_token
 
 
 async def match_customer_data(
