@@ -1,0 +1,34 @@
+{
+    "phoneNumber": "+99012345678",
+    "data": {
+        "location": {
+            "lastLocationTime": "2025-10-01T12:54:13.143Z",
+            "available": true,
+            "latitude": 45.79,
+            "longitude": 24.15,
+            "radius": 500
+        },
+        "reachability": {
+            "lastStatusTime": "2025-09-16T12:54:13.151Z",
+            "reachabilityStatus": "CONNECTED_DATA"
+        },
+        "roaming": {
+            "roaming": false
+        },
+        "simSwap": {
+            "latestSimChange": "2025-09-30T12:34:56.789Z"
+        },
+        "kyc": {
+            "familyName": "Barosanu",
+            "middleNames": "Ciclon Vasile",
+            "givenName": "Marcel",
+            "birthdate": "2001-05-10",
+            "country": "Ro",
+            "locality":"Sibiu",
+            "region":"Sibiu",
+            "address":"Strada Vasile Milea, Numarul 88",
+            "email": "marcelbarosanu@gmail.com",
+            "gender": "MALE"
+        }
+    }
+}
