@@ -126,3 +126,101 @@ async def match_customer_data(
     result["checkedFields"] = checked_count
     
     return result
+
+
+def verify_kyc_data(
+    phone_number: str,
+    provided_name: Optional[str] = None,
+    provided_address: Optional[str] = None
+) -> Dict[str, Any]:
+    """
+    Simplified KYC verification for fraud detection.
+    Returns a match score instead of individual field matches.
+    
+    Args:
+        phone_number (str): The phone number to verify
+        provided_name (str, optional): Name provided by caller
+        provided_address (str, optional): Address provided by caller
+        
+    Returns:
+        dict: Verification result with overall match score
+            - status (str): "success" or "not_found"
+            - overall_match_score (int): 0-100 (higher = better match)
+            - phone_number (str): The phone number checked
+    """
+    # Load mock data
+    mock_data = load_user_data(phone_number)
+    
+    if not mock_data:
+        return {
+            "error": f"Phone number {phone_number} not found in mock data",
+            "status": "not_found",
+            "phone_number": phone_number,
+            "overall_match_score": 0
+        }
+    
+    kyc_data = mock_data.get('data', {}).get('kyc', {})
+    
+    scores = []
+    
+    # Check name match if provided
+    if provided_name:
+        stored_name = kyc_data.get('name', '')
+        stored_given_name = kyc_data.get('givenName', '')
+        stored_family_name = kyc_data.get('familyName', '')
+        
+        if stored_name:
+            provided_name_clean = provided_name.lower().strip()
+            stored_name_clean = stored_name.lower().strip()
+            
+            # Check for exact match
+            if provided_name_clean == stored_name_clean:
+                scores.append(100)
+            # Check if provided name contains key parts
+            elif stored_given_name.lower() in provided_name_clean and stored_family_name.lower() in provided_name_clean:
+                scores.append(90)
+            # Check if family name matches at least
+            elif stored_family_name.lower() in provided_name_clean:
+                scores.append(60)
+            # Check if given name matches at least
+            elif stored_given_name.lower() in provided_name_clean:
+                scores.append(50)
+            else:
+                scores.append(10)
+        else:
+            scores.append(50)  # No stored name to compare
+    
+    # Check address match if provided
+    if provided_address:
+        stored_address = kyc_data.get('address', '')
+        stored_street_name = kyc_data.get('streetName', '')
+        
+        if stored_address or stored_street_name:
+            provided_address_clean = provided_address.lower().strip()
+            
+            # Check if street name is in provided address
+            if stored_street_name and stored_street_name.lower() in provided_address_clean:
+                scores.append(90)
+            # Check if stored address is in provided address or vice versa
+            elif stored_address and (
+                provided_address_clean in stored_address.lower() or
+                stored_address.lower() in provided_address_clean
+            ):
+                scores.append(80)
+            else:
+                scores.append(20)
+        else:
+            scores.append(50)  # No stored address to compare
+    
+    # Calculate overall match score
+    if scores:
+        overall_match_score = int(sum(scores) / len(scores))
+    else:
+        overall_match_score = 50  # No fields to check
+    
+    return {
+        "status": "success",
+        "phone_number": phone_number,
+        "overall_match_score": overall_match_score,
+        "fields_checked": len(scores)
+    }

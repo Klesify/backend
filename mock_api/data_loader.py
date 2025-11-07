@@ -79,3 +79,60 @@ def load_companies_data() -> Optional[List[Dict[str, Any]]]:
     except (json.JSONDecodeError, IOError) as e:
         print(f"Error reading companies data: {e}")
         return None
+
+
+def find_company_by_name(company_name: str) -> Optional[Dict[str, Any]]:
+    """
+    Find a company by name (case-insensitive partial match)
+    
+    Args:
+        company_name (str): Company name to search for
+        
+    Returns:
+        dict: Company data if found, None otherwise
+    """
+    if not company_name:
+        return None
+        
+    companies = load_companies_data()
+    if not companies:
+        return None
+    
+    company_name_lower = company_name.lower()
+    
+    for company in companies:
+        company_name_field = company.get('company_name', '')
+        if company_name_lower in company_name_field.lower() or company_name_field.lower() in company_name_lower:
+            return company
+    
+    return None
+
+
+def find_employee_by_phone(phone_number: str) -> Optional[Dict[str, Any]]:
+    """
+    Find an employee by their phone number across all companies
+    
+    Args:
+        phone_number (str): Phone number in E.164 format
+        
+    Returns:
+        dict: Employee data with company info if found, None otherwise
+    """
+    if not phone_number:
+        return None
+        
+    companies = load_companies_data()
+    if not companies:
+        return None
+    
+    for company in companies:
+        for employee in company.get('company_employees', []):
+            if employee.get('phone') == phone_number:
+                # Return employee data with company context
+                return {
+                    **employee,
+                    'company_name': company.get('company_name'),
+                    'company_id': company.get('id')
+                }
+    
+    return None
