@@ -12,41 +12,10 @@ from mock_api.data_loader import (
     load_companies_data
 )
 from mock_api.location_verification import verify_device_location, verify_device_location_by_city
-from mock_api.kyc_match import verify_kyc_data, match_customer_data
+from mock_api.kyc_match import verify_kyc_data, match_customer_data, calculate_name_similarity
 
 
-def calculate_name_similarity(name1: str, name2: str) -> float:
-    """
-    Calculate simple name similarity score (0-1).
-    Basic implementation - can be enhanced with fuzzy matching.
-    """
-    if not name1 or not name2:
-        return 0.0
-    
-    name1_clean = name1.lower().strip()
-    name2_clean = name2.lower().strip()
-    
-    if name1_clean == name2_clean:
-        return 1.0
-    
-    # Check if names contain each other
-    if name1_clean in name2_clean or name2_clean in name1_clean:
-        return 0.8
-    
-    # Simple word overlap check
-    words1 = set(name1_clean.split())
-    words2 = set(name2_clean.split())
-    
-    if not words1 or not words2:
-        return 0.0
-    
-    overlap = len(words1.intersection(words2))
-    total_unique = len(words1.union(words2))
-    
-    return overlap / total_unique if total_unique > 0 else 0.0
-
-
-async def detect_fraud_from_audio(audio_path: str, caller_phone: str) -> Dict[str, Any]:
+async def detect_fraud_from_audio(audiu: str, caller_phone: str) -> Dict[str, Any]:
     """
     Detect fraud from audio file by transcribing and analyzing the content.
     
@@ -60,8 +29,8 @@ async def detect_fraud_from_audio(audio_path: str, caller_phone: str) -> Dict[st
     from extract_text_from_audio import transcribe_audio_blob
     
     # Step 1: Transcribe audio to text
-    print(f"Transcribing audio from: {audio_path}")
-    call_text = transcribe_audio_blob(audio_path, audio_format="wav", language="ro")
+    print(f"Transcribing audio from: {audiu}")
+    call_text = transcribe_audio_blob(audiu, audio_format="wav", language="ro")
     
     if not call_text:
         return {
@@ -112,12 +81,37 @@ async def detect_fraud(extracted_data: Dict[str, Any], caller_phone: str) -> Dic
         "extracted_data": extracted_data
     }
     
+    # Validate extraction completeness
+    critical_fields = ["name", "locality", "country", "companyName"]
+    optional_fields = ["address", "email", "location", "company"]
+    
+    missing_critical = [field for field in critical_fields if not extracted_data.get(field)]
+    missing_optional = [field for field in optional_fields if not extracted_data.get(field)]
+    
+    extraction_quality = 100 - (len(missing_critical) * 20) - (len(missing_optional) * 5)
+    extraction_quality = max(0, min(100, extraction_quality))
+    
+    result["extraction_quality"] = {
+        "score": extraction_quality,
+        "missing_critical_fields": missing_critical,
+        "missing_optional_fields": missing_optional,
+        "total_fields_extracted": len([k for k, v in extracted_data.items() if v])
+    }
+    
+    # Add risk factors for missing data
+    if missing_critical:
+        result["risk_factors"].append(f"Missing critical information: {', '.join(missing_critical)}")
+    
+    if extraction_quality < 50:
+        result["risk_factors"].append("Poor data extraction quality - insufficient information")
+    
     # Extract caller information
     caller_name = extracted_data.get("name", "")
     caller_location = extracted_data.get("locality", "") or extracted_data.get("location", "")
     caller_country = extracted_data.get("country", "")
     caller_address = extracted_data.get("address", "")
     claimed_company = extracted_data.get("companyName", "") or extracted_data.get("company", "")
+    caller_email = extracted_data.get("email", "")
     
     # Track individual scores for weighted calculation
     scores = []

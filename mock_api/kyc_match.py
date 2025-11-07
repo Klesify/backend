@@ -5,6 +5,37 @@ from typing import Optional, Dict, Any
 from .data_loader import load_user_data
 
 
+def calculate_name_similarity(name1: str, name2: str) -> float:
+    """
+    Calculate simple name similarity score (0-1).
+    Basic implementation - can be enhanced with fuzzy matching.
+    """
+    if not name1 or not name2:
+        return 0.0
+    
+    name1_clean = name1.lower().strip()
+    name2_clean = name2.lower().strip()
+    
+    if name1_clean == name2_clean:
+        return 1.0
+    
+    # Check if names contain each other
+    if name1_clean in name2_clean or name2_clean in name1_clean:
+        return 0.8
+    
+    # Simple word overlap check
+    words1 = set(name1_clean.split())
+    words2 = set(name2_clean.split())
+    
+    if not words1 or not words2:
+        return 0.0
+    
+    overlap = len(words1.intersection(words2))
+    total_unique = len(words1.union(words2))
+    
+    return overlap / total_unique if total_unique > 0 else 0.0
+
+
 async def match_customer_data(
     phone_number: str,
     id_document: Optional[str] = None,
@@ -98,9 +129,22 @@ async def match_customer_data(
             if kyc_value is None:
                 result[result_field] = "not_available"
             else:
-                # Case-insensitive comparison
-                match = str(param_value).lower().strip() == str(kyc_value).lower().strip()
-                result[result_field] = "true" if match else "false"
+                # Use name similarity for name fields
+                if param_name == "name":
+                    similarity = calculate_name_similarity(str(param_value), str(kyc_value))
+                    # Consider match if similarity >= 0.8
+                    match = similarity >= 0.8
+                    result[result_field] = "true" if match else "false"
+                    result["nameSimilarity"] = round(similarity, 2)
+                elif param_name in ["given_name", "family_name"]:
+                    similarity = calculate_name_similarity(str(param_value), str(kyc_value))
+                    # More lenient for partial names - >= 0.6
+                    match = similarity >= 0.6
+                    result[result_field] = "true" if match else "false"
+                else:
+                    # Case-insensitive comparison for other fields
+                    match = str(param_value).lower().strip() == str(kyc_value).lower().strip()
+                    result[result_field] = "true" if match else "false"
                 
                 if match:
                     matched_count += 1
@@ -126,101 +170,3 @@ async def match_customer_data(
     result["checkedFields"] = checked_count
     
     return result
-
-
-def verify_kyc_data(
-    phone_number: str,
-    provided_name: Optional[str] = None,
-    provided_address: Optional[str] = None
-) -> Dict[str, Any]:
-    """
-    Simplified KYC verification for fraud detection.
-    Returns a match score instead of individual field matches.
-    
-    Args:
-        phone_number (str): The phone number to verify
-        provided_name (str, optional): Name provided by caller
-        provided_address (str, optional): Address provided by caller
-        
-    Returns:
-        dict: Verification result with overall match score
-            - status (str): "success" or "not_found"
-            - overall_match_score (int): 0-100 (higher = better match)
-            - phone_number (str): The phone number checked
-    """
-    # Load mock data
-    mock_data = load_user_data(phone_number)
-    
-    if not mock_data:
-        return {
-            "error": f"Phone number {phone_number} not found in mock data",
-            "status": "not_found",
-            "phone_number": phone_number,
-            "overall_match_score": 0
-        }
-    
-    kyc_data = mock_data.get('data', {}).get('kyc', {})
-    
-    scores = []
-    
-    # Check name match if provided
-    if provided_name:
-        stored_name = kyc_data.get('name', '')
-        stored_given_name = kyc_data.get('givenName', '')
-        stored_family_name = kyc_data.get('familyName', '')
-        
-        if stored_name:
-            provided_name_clean = provided_name.lower().strip()
-            stored_name_clean = stored_name.lower().strip()
-            
-            # Check for exact match
-            if provided_name_clean == stored_name_clean:
-                scores.append(100)
-            # Check if provided name contains key parts
-            elif stored_given_name.lower() in provided_name_clean and stored_family_name.lower() in provided_name_clean:
-                scores.append(90)
-            # Check if family name matches at least
-            elif stored_family_name.lower() in provided_name_clean:
-                scores.append(60)
-            # Check if given name matches at least
-            elif stored_given_name.lower() in provided_name_clean:
-                scores.append(50)
-            else:
-                scores.append(10)
-        else:
-            scores.append(50)  # No stored name to compare
-    
-    # Check address match if provided
-    if provided_address:
-        stored_address = kyc_data.get('address', '')
-        stored_street_name = kyc_data.get('streetName', '')
-        
-        if stored_address or stored_street_name:
-            provided_address_clean = provided_address.lower().strip()
-            
-            # Check if street name is in provided address
-            if stored_street_name and stored_street_name.lower() in provided_address_clean:
-                scores.append(90)
-            # Check if stored address is in provided address or vice versa
-            elif stored_address and (
-                provided_address_clean in stored_address.lower() or
-                stored_address.lower() in provided_address_clean
-            ):
-                scores.append(80)
-            else:
-                scores.append(20)
-        else:
-            scores.append(50)  # No stored address to compare
-    
-    # Calculate overall match score
-    if scores:
-        overall_match_score = int(sum(scores) / len(scores))
-    else:
-        overall_match_score = 50  # No fields to check
-    
-    return {
-        "status": "success",
-        "phone_number": phone_number,
-        "overall_match_score": overall_match_score,
-        "fields_checked": len(scores)
-    }
