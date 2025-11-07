@@ -190,37 +190,3 @@ def save_audio_blob(audio_data: bytes, output_path: str) -> bool:
     except Exception as e:
         print(f"Error saving audio blob: {e}")
         return False
-
-
-# Example usage
-if __name__ == "__main__":
-    # Test with Marcel Barosanu's audio file
-    audio_path = "mock_data/users/Marcel_Barosanu/Marcel_Barosanu.wav"
-    
-    print("Testing audio transcription...")
-    print(f"Audio file: {audio_path}\n")
-    
-    # Simple transcription
-    print("=" * 80)
-    print("SIMPLE TRANSCRIPTION:")
-    print("=" * 80)
-    text = transcribe_audio_blob(audio_path, audio_format="wav", language="ro")
-    if text:
-        print(f"Transcribed text: {text}\n")
-    else:
-        print("Transcription failed.\n")
-    
-    # Detailed transcription with timestamps
-    print("=" * 80)
-    print("DETAILED TRANSCRIPTION WITH TIMESTAMPS:")
-    print("=" * 80)
-    detailed = transcribe_audio_with_timestamps(audio_path, audio_format="wav", language="ro")
-    if detailed:
-        print(f"Full text: {detailed['text']}")
-        print(f"Duration: {detailed['duration']:.2f} seconds")
-        print(f"Language detected: {detailed['language']}")
-        print(f"\nSegments ({len(detailed['segments'])}):")
-        for i, segment in enumerate(detailed['segments'], 1):
-            print(f"  [{i}] [{segment['start']:.2f}s - {segment['end']:.2f}s]: {segment['text']}")
-    else:
-        print("Detailed transcription failed.")
