@@ -12,7 +12,7 @@ from mock_api.data_loader import (
     load_companies_data
 )
 from mock_api.location_verification import verify_device_location, verify_device_location_by_city
-from mock_api.kyc_match import verify_kyc_data
+from mock_api.kyc_match import verify_kyc_data, match_customer_data
 
 
 def calculate_name_similarity(name1: str, name2: str) -> float:
@@ -44,6 +44,50 @@ def calculate_name_similarity(name1: str, name2: str) -> float:
     total_unique = len(words1.union(words2))
     
     return overlap / total_unique if total_unique > 0 else 0.0
+
+
+async def detect_fraud_from_audio(audio_path: str, caller_phone: str) -> Dict[str, Any]:
+    """
+    Detect fraud from audio file by transcribing and analyzing the content.
+    
+    Args:
+        audio_path (str): Path to audio file or audio blob
+        caller_phone (str): The phone number of the caller
+        
+    Returns:
+        Dict: Comprehensive fraud analysis with overall scam score (1-100)
+    """
+    from extract_text_from_audio import transcribe_audio_blob
+    
+    # Step 1: Transcribe audio to text
+    print(f"Transcribing audio from: {audio_path}")
+    call_text = transcribe_audio_blob(audio_path, audio_format="wav", language="ro")
+    
+    if not call_text:
+        return {
+            "error": "Failed to transcribe audio",
+            "overall_scam_score": 75,
+            "risk_level": "HIGH"
+        }
+    
+    print(f"Transcribed text: {call_text}\n")
+    
+    # Step 2: Extract caller information
+    from extract_info_from_text import extract_user_info
+    extracted_data = extract_user_info(call_text)
+    
+    if not extracted_data:
+        return {
+            "error": "Failed to extract caller information",
+            "overall_scam_score": 70,
+            "risk_level": "HIGH"
+        }
+    
+    # Step 3: Run fraud detection
+    fraud_result = await detect_fraud(extracted_data, caller_phone)
+    fraud_result["transcribed_text"] = call_text
+    
+    return fraud_result
 
 
 async def detect_fraud(extracted_data: Dict[str, Any], caller_phone: str) -> Dict[str, Any]:
@@ -105,7 +149,7 @@ async def detect_fraud(extracted_data: Dict[str, Any], caller_phone: str) -> Dic
         result["risk_factors"].append("No location provided")
     
     scores.append(location_score)
-    weights.append(0.3)  # 30% weight for location
+    weights.append(0.25)  # 25% weight for location
     
     # 2. COMPANY VERIFICATION (if company claimed)
     company_score = 20  # Default low risk if no company claimed
@@ -121,8 +165,8 @@ async def detect_fraud(extracted_data: Dict[str, Any], caller_phone: str) -> Dic
                 
                 if caller_phone == company_phone:
                     # Caller is using company's official phone - very suspicious for individual caller
-                    company_score = 95
-                    result["risk_factors"].append(f"Caller using company's official phone number")
+                    company_score = 98
+                    result["risk_factors"].append(f"CRITICAL: Caller using company's official phone number")
                 else:
                     # Check if caller is a legitimate employee
                     employee_data = find_employee_by_phone(caller_phone)
@@ -133,18 +177,18 @@ async def detect_fraud(extracted_data: Dict[str, Any], caller_phone: str) -> Dic
                         name_similarity = calculate_name_similarity(caller_name, employee_name)
                         
                         if name_similarity >= 0.8:
-                            company_score = 10  # Very low risk - legitimate employee
+                            company_score = 5  # Very low risk - legitimate employee with name match
                             result["risk_factors"].append("Verified employee with name match")
                         elif name_similarity >= 0.5:
-                            company_score = 30  # Low-moderate risk - partial name match
+                            company_score = 25  # Low-moderate risk - partial name match
                             result["risk_factors"].append("Employee found but name partially matches")
                         else:
-                            company_score = 80  # High risk - phone matches but name doesn't
+                            company_score = 75  # High risk - phone matches but name doesn't
                             result["risk_factors"].append("Employee phone found but name mismatch")
                     else:
-                        # Claims company affiliation but not in employee database
-                        company_score = 85
-                        result["risk_factors"].append(f"Claims {claimed_company} employment but not in employee database")
+                        # Claims company affiliation but not in employee database - VERY HIGH RISK
+                        company_score = 95
+                        result["risk_factors"].append(f"CRITICAL: Claims {claimed_company} employment but NOT in employee database")
                         
                 result["verification_results"]["company"] = {
                     "company_found": True,
@@ -153,8 +197,8 @@ async def detect_fraud(extracted_data: Dict[str, Any], caller_phone: str) -> Dic
                     "name_similarity": calculate_name_similarity(caller_name, employee_data.get("name", "")) if employee_data else 0
                 }
             else:
-                # Company not found in database
-                company_score = 60  # Moderate risk - unknown company
+                # Company not found in database - might be legitimate unknown company
+                company_score = 50  # Moderate risk - unknown company
                 result["risk_factors"].append(f"Claimed company '{claimed_company}' not found in database")
                 result["verification_results"]["company"] = {"company_found": False}
                 
@@ -163,26 +207,35 @@ async def detect_fraud(extracted_data: Dict[str, Any], caller_phone: str) -> Dic
             result["risk_factors"].append(f"Company verification failed: {str(e)}")
     
     scores.append(company_score)
-    weights.append(0.4)  # 40% weight for company verification
+    weights.append(0.5)  # 50% weight for company verification - HIGHEST PRIORITY
     
     # 3. KYC DATA VERIFICATION
     kyc_score = 60  # Default moderate risk
     
     try:
-        kyc_result = verify_kyc_data(
+        # Use comprehensive match_customer_data for detailed KYC verification
+        kyc_result = await match_customer_data(
             phone_number=caller_phone,
-            provided_name=caller_name,
-            provided_address=caller_address
+            name=caller_name,
+            address=caller_address,
+            locality=caller_location,
+            country=caller_country
         )
         
         if kyc_result.get("status") == "success":
-            match_score = kyc_result.get("overall_match_score", 50)
-            # Convert match score to scam score (inverse relationship)
-            kyc_score = max(1, 100 - match_score)
+            # Calculate match score from risk score (inverse)
+            risk_score = kyc_result.get("riskScore", 50)
+            matched_fields = kyc_result.get("matchedFields", 0)
+            checked_fields = kyc_result.get("checkedFields", 1)
             
-            if match_score >= 80:
+            # Convert risk score to scam score
+            kyc_score = risk_score
+            
+            match_percentage = (matched_fields / checked_fields * 100) if checked_fields > 0 else 50
+            
+            if match_percentage >= 80:
                 result["risk_factors"].append("Strong KYC data match - low fraud risk")
-            elif match_score >= 50:
+            elif match_percentage >= 50:
                 result["risk_factors"].append("Partial KYC data match - moderate risk")
             else:
                 result["risk_factors"].append("Poor KYC data match - high fraud risk")
@@ -197,7 +250,7 @@ async def detect_fraud(extracted_data: Dict[str, Any], caller_phone: str) -> Dic
         result["risk_factors"].append(f"KYC verification error: {str(e)}")
     
     scores.append(kyc_score)
-    weights.append(0.3)  # 30% weight for KYC verification
+    weights.append(0.25)  # 25% weight for KYC verification
     
     # 4. CALCULATE WEIGHTED OVERALL SCORE
     if scores and weights:
@@ -230,9 +283,9 @@ async def detect_fraud(extracted_data: Dict[str, Any], caller_phone: str) -> Dic
             "kyc_score": kyc_score
         },
         "scoring_weights": {
-            "location": 0.3,
-            "company": 0.4,
-            "kyc": 0.3
+            "location": 0.25,
+            "company": 0.50,
+            "kyc": 0.25
         }
     })
     
@@ -253,22 +306,3 @@ async def quick_fraud_check(extracted_data: Dict[str, Any], caller_phone: str) -
     """
     result = await detect_fraud(extracted_data, caller_phone)
     return result["overall_scam_score"]
-
-
-if __name__ == "__main__":
-    # Example usage
-    sample_extracted_data = {
-        "name": "Marcel Barosanu",
-        "location": "Sibiu",
-        "address": "street Nicolae Iancu",
-        "company": "Orange Romania"
-    }
-    
-    async def test():
-        result = await detect_fraud(sample_extracted_data, "+40712345678")
-        print(f"Fraud Detection Result:")
-        print(f"Overall Scam Score: {result['overall_scam_score']}")
-        print(f"Risk Level: {result['risk_level']}")
-        print(f"Risk Factors: {result['risk_factors']}")
-        
-    asyncio.run(test())
