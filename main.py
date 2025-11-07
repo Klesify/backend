@@ -25,7 +25,7 @@ class ResponseData(BaseModel):
     # Add other response fields
 
 
-@app.post("/", response_model=ResponseData)
+@app.post("/")
 async def your_function(data: RequestData):
     """
     Your POST endpoint - define the function implementation here
