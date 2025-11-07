@@ -4,13 +4,14 @@ Loads and manages mock client data from JSON files
 """
 import os
 import json
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
-# Path to mock data directory
-MOCK_DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'mock_client_data')
+# Path to mock data directories
+MOCK_USERS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'mock_data', 'users')
+MOCK_COMPANIES_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'mock_data', 'companies')
 
 
-def load_mock_data(phone_number: str) -> Optional[Dict[str, Any]]:
+def load_user_data(phone_number: str) -> Optional[Dict[str, Any]]:
     """
     Load mock data for a specific phone number
     
@@ -20,8 +21,8 @@ def load_mock_data(phone_number: str) -> Optional[Dict[str, Any]]:
     Returns:
         dict: Mock data for the phone number, or None if not found
     """
-    # Iterate through all subdirectories in mock_client_data
-    for root, dirs, files in os.walk(MOCK_DATA_DIR):
+    # Iterate through all subdirectories in mock_data/users
+    for root, dirs, files in os.walk(MOCK_USERS_DIR):
         for file in files:
             if file.endswith('.json'):
                 file_path = os.path.join(root, file)
@@ -46,7 +47,7 @@ def get_all_phone_numbers() -> list:
     """
     phone_numbers = []
     
-    for root, dirs, files in os.walk(MOCK_DATA_DIR):
+    for root, dirs, files in os.walk(MOCK_USERS_DIR):
         for file in files:
             if file.endswith('.json'):
                 file_path = os.path.join(root, file)
@@ -60,3 +61,21 @@ def get_all_phone_numbers() -> list:
                     continue
     
     return phone_numbers
+
+
+def load_companies_data() -> Optional[List[Dict[str, Any]]]:
+    """
+    Load all companies data from companies.json
+    
+    Returns:
+        list: List of all companies with their data, or None if file not found
+    """
+    companies_file = os.path.join(MOCK_COMPANIES_DIR, 'companies.json')
+    
+    try:
+        with open(companies_file, 'r', encoding='utf-8') as f:
+            companies = json.load(f)
+            return companies
+    except (json.JSONDecodeError, IOError) as e:
+        print(f"Error reading companies data: {e}")
+        return None

@@ -3,7 +3,7 @@ Mock SIM Swap API - simulates Orange SIM Swap detection
 """
 from typing import Optional
 from datetime import datetime, timezone
-from .data_loader import load_mock_data
+from .data_loader import load_user_data
 
 
 async def check_sim_swap(phone_number: str, max_age: Optional[int] = None) -> dict:
@@ -22,7 +22,7 @@ async def check_sim_swap(phone_number: str, max_age: Optional[int] = None) -> di
             - status (str): "success" or "not_found"
     """
     # Load mock data
-    mock_data = load_mock_data(phone_number)
+    mock_data = load_user_data(phone_number)
     
     if not mock_data:
         return {
@@ -78,7 +78,7 @@ async def retrieve_sim_swap_date(phone_number: str) -> dict:
             - status (str): "success" or "not_found"
     """
     # Load mock data
-    mock_data = load_mock_data(phone_number)
+    mock_data = load_user_data(phone_number)
     
     if not mock_data:
         return {

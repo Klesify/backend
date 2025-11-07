@@ -2,7 +2,7 @@
 Mock Location Retrieval API - simulates Orange device location retrieval
 """
 from typing import Optional
-from .data_loader import load_mock_data
+from .data_loader import load_user_data
 
 
 async def retrieve_device_location(
@@ -24,7 +24,7 @@ async def retrieve_device_location(
             - status (str): "success" or "not_found"
     """
     # Load mock data
-    mock_data = load_mock_data(phone_number)
+    mock_data = load_user_data(phone_number)
     
     if not mock_data:
         return {

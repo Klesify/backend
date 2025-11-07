@@ -3,7 +3,7 @@ Mock Location Verification API - simulates Orange device location verification
 """
 from typing import Optional
 from math import radians, cos, sin, asin, sqrt
-from .data_loader import load_mock_data
+from .data_loader import load_user_data
 
 
 def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
@@ -62,7 +62,7 @@ async def verify_device_location(
         raise ValueError("Radius must be between 2,000 and 200,000 meters")
     
     # Load mock data
-    mock_data = load_mock_data(phone_number)
+    mock_data = load_user_data(phone_number)
     
     if not mock_data:
         return {
@@ -142,7 +142,7 @@ async def verify_device_location_by_city(
         dict: Verification result similar to verify_device_location
     """
     # Load mock data
-    mock_data = load_mock_data(phone_number)
+    mock_data = load_user_data(phone_number)
     
     if not mock_data:
         return {

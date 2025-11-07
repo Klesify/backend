@@ -2,7 +2,7 @@
 Mock KYC Match API - simulates Orange KYC customer verification
 """
 from typing import Optional, Dict, Any
-from .data_loader import load_mock_data
+from .data_loader import load_user_data
 
 
 async def match_customer_data(
@@ -45,7 +45,7 @@ async def match_customer_data(
             - checkedFields (int): Total number of fields checked
     """
     # Load mock data
-    mock_data = load_mock_data(phone_number)
+    mock_data = load_user_data(phone_number)
     
     if not mock_data:
         return {

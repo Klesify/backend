@@ -1,0 +1,162 @@
+[
+    {
+        "company_name": "Orange Romania",
+        "company_phone": "+99000000000",
+        "company_locations": [
+            {
+                "country": "RO",
+                "city": "Bucharest",
+                "street": "Calea Victoriei",
+                "number": "155",
+                "latitude": 44.4268,
+                "longitude": 26.1025
+            },
+            {
+                "country": "RO",
+                "city": "Cluj-Napoca",
+                "street": "Strada Memorandumului",
+                "number": "28",
+                "latitude": 46.7712,
+                "longitude": 23.6236
+            },
+            {
+                "country": "RO",
+                "city": "Timisoara",
+                "street": "Bulevardul Revolutiei",
+                "number": "5",
+                "latitude": 45.7489,
+                "longitude": 21.2087
+            }
+        ],
+        "company_employees": [
+            {
+                "idDocument": "ID-RO-19850312-01",
+                "name": "Ana Maria Popescu",
+                "givenName": "Ana Maria",
+                "middleNames": "",
+                "familyName": "Popescu",
+                "familyNameAtBirth": "Ionescu",
+                "nameKanaHankaku": "",
+                "nameKanaZenkaku": "",
+                "birthdate": "1985-03-12",
+                "country": "RO",
+                "locality": "Bucharest",
+                "region": "Bucharest",
+                "address": "Strada Aviatorilor 24",
+                "streetName": "Aviatorilor",
+                "streetNumber": "24",
+                "houseNumberExtension": "Apt 15",
+                "postalCode": "011853",
+                "email": "ana.popescu@orange.ro",
+                "gender": "FEMALE",
+                "position": "Customer Support Manager",
+                "department": "Customer Service",
+                "employeeId": "ORA-2019-0324"
+            },
+            {
+                "idDocument": "ID-RO-19900605-02",
+                "name": "Andrei Constantin Dumitru",
+                "givenName": "Andrei",
+                "middleNames": "Constantin",
+                "familyName": "Dumitru",
+                "familyNameAtBirth": "Dumitru",
+                "nameKanaHankaku": "",
+                "nameKanaZenkaku": "",
+                "birthdate": "1990-06-05",
+                "country": "RO",
+                "locality": "Bucharest",
+                "region": "Bucharest",
+                "address": "Bulevardul Magheru 32",
+                "streetName": "Magheru",
+                "streetNumber": "32",
+                "houseNumberExtension": "",
+                "postalCode": "010321",
+                "email": "andrei.dumitru@orange.ro",
+                "gender": "MALE",
+                "position": "Fraud Prevention Specialist",
+                "department": "Security",
+                "employeeId": "ORA-2020-0156"
+            }
+        ]
+    },
+    {
+        "company_name": "Banca Transilvania",
+        "company_phone": "+40264407150",
+        "company_locations": [
+            {
+                "country": "RO",
+                "city": "Cluj-Napoca",
+                "street": "Calea Dorobantilor",
+                "number": "30-36",
+                "latitude": 46.7712,
+                "longitude": 23.6236
+            },
+            {
+                "country": "RO",
+                "city": "Bucharest",
+                "street": "Strada Ion Campineanu",
+                "number": "11",
+                "latitude": 44.4378,
+                "longitude": 26.0969
+            },
+            {
+                "country": "RO",
+                "city": "Sibiu",
+                "street": "Strada Nicolae Balcescu",
+                "number": "32",
+                "latitude": 45.7983,
+                "longitude": 24.1256
+            }
+        ],
+        "company_employees": [
+            {
+                "idDocument": "ID-RO-19880915-03",
+                "name": "Elena Gabriela Stanciu",
+                "givenName": "Elena",
+                "middleNames": "Gabriela",
+                "familyName": "Stanciu",
+                "familyNameAtBirth": "Stanciu",
+                "nameKanaHankaku": "",
+                "nameKanaZenkaku": "",
+                "birthdate": "1988-09-15",
+                "country": "RO",
+                "locality": "Cluj-Napoca",
+                "region": "Cluj",
+                "address": "Strada Observatorului 15",
+                "streetName": "Observatorului",
+                "streetNumber": "15",
+                "houseNumberExtension": "Bl A, Apt 23",
+                "postalCode": "400363",
+                "email": "elena.stanciu@bancatransilvania.ro",
+                "gender": "FEMALE",
+                "position": "Customer Relations Officer",
+                "department": "Retail Banking",
+                "employeeId": "BT-2018-0892"
+            },
+            {
+                "idDocument": "ID-RO-19920220-04",
+                "name": "Mihai Alexandru Popa",
+                "givenName": "Mihai",
+                "middleNames": "Alexandru",
+                "familyName": "Popa",
+                "familyNameAtBirth": "Popa",
+                "nameKanaHankaku": "",
+                "nameKanaZenkaku": "",
+                "birthdate": "1992-02-20",
+                "country": "RO",
+                "locality": "Cluj-Napoca",
+                "region": "Cluj",
+                "address": "Calea Turzii 89",
+                "streetName": "Turzii",
+                "streetNumber": "89",
+                "houseNumberExtension": "",
+                "postalCode": "400495",
+                "email": "mihai.popa@bancatransilvania.ro",
+                "gender": "MALE",
+                "position": "Anti-Fraud Analyst",
+                "department": "Risk Management",
+                "employeeId": "BT-2021-0445"
+            }
+        ]
+    }
+]
