@@ -28,7 +28,7 @@ async def match_customer_data(
     gender: Optional[str] = None
 ) -> Dict[str, Any]:
     """
-    Match customer data against mock database
+    Match customer data against mock database and calculate risk score
     
     Args:
         phone_number (str): The phone number to verify
@@ -39,6 +39,10 @@ async def match_customer_data(
             - {field}Match (str): "true", "false", or "not_available" for each field
             - phone_number (str): The phone number checked
             - status (str): "success" or "not_found"
+            - riskScore (int): Risk score from 1-100 (higher = more mismatches = higher scam risk)
+            - matchedFields (int): Number of fields that matched
+            - mismatchedFields (int): Number of fields that didn't match
+            - checkedFields (int): Total number of fields checked
     """
     # Load mock data
     mock_data = load_mock_data(phone_number)
@@ -81,9 +85,15 @@ async def match_customer_data(
         "gender": ("gender", "genderMatch")
     }
     
+    # Track statistics for risk calculation
+    matched_count = 0
+    mismatched_count = 0
+    checked_count = 0
+    
     for param_name, (kyc_field, result_field) in field_mappings.items():
         param_value = locals()[param_name]
         if param_value is not None:
+            checked_count += 1
             kyc_value = kyc_data.get(kyc_field)
             if kyc_value is None:
                 result[result_field] = "not_available"
@@ -91,5 +101,28 @@ async def match_customer_data(
                 # Case-insensitive comparison
                 match = str(param_value).lower().strip() == str(kyc_value).lower().strip()
                 result[result_field] = "true" if match else "false"
+                
+                if match:
+                    matched_count += 1
+                else:
+                    mismatched_count += 1
+    
+    # Calculate risk score (1-100 scale)
+    if checked_count == 0:
+        risk_score = 50  # No fields checked = medium risk
+    else:
+        # Calculate mismatch percentage
+        mismatch_percentage = (mismatched_count / checked_count) * 100
+        
+        # Map percentage to 1-100 scale
+        # 0% mismatches = 1 (lowest risk)
+        # 100% mismatches = 100 (highest risk)
+        risk_score = max(1, min(100, int(mismatch_percentage) + 1))
+    
+    # Add statistics to result
+    result["riskScore"] = risk_score
+    result["matchedFields"] = matched_count
+    result["mismatchedFields"] = mismatched_count
+    result["checkedFields"] = checked_count
     
     return result
