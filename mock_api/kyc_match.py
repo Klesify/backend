@@ -60,10 +60,19 @@ async def match_customer_data(
     
     # Check each provided field
     field_mappings = {
+        "id_document": ("idDocument", "idDocumentMatch"),
+        "name": ("name", "nameMatch"),
         "given_name": ("givenName", "givenNameMatch"),
         "family_name": ("familyName", "familyNameMatch"),
+        "name_kana_hankaku": ("nameKanaHankaku", "nameKanaHankakuMatch"),
+        "name_kana_zenkaku": ("nameKanaZenkaku", "nameKanaZenkakuMatch"),
         "middle_names": ("middleNames", "middleNamesMatch"),
+        "family_name_at_birth": ("familyNameAtBirth", "familyNameAtBirthMatch"),
         "address": ("address", "addressMatch"),
+        "street_name": ("streetName", "streetNameMatch"),
+        "street_number": ("streetNumber", "streetNumberMatch"),
+        "house_number_extension": ("houseNumberExtension", "houseNumberExtensionMatch"),
+        "postal_code": ("postalCode", "postalCodeMatch"),
         "region": ("region", "regionMatch"),
         "locality": ("locality", "localityMatch"),
         "country": ("country", "countryMatch"),
