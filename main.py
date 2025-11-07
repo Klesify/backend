@@ -1,5 +1,6 @@
 import asyncio
 from orange_api import *
+from mock_api import *
 from extract_info_from_text import extract_user_info
 
 # Scammer (Marcel Barosanu) is calling and pretending to be from a bank/company
@@ -21,6 +22,25 @@ async def main():
             print("No data extracted (check if OpenAI API key is set in .env)")
         
         phone_number = "+99012345678"
+
+        match_result = await match_customer_data(
+            phone_number=phone_number,
+            name=extracted_data.get("name"),
+            given_name=extracted_data.get("givenName"),
+            family_name=extracted_data.get("familyName"),
+            locality=extracted_data.get("locality"),
+            country=extracted_data.get("country"),
+            email=extracted_data.get("email")
+        )
+        print("KYC Match Result:", match_result)
+        location_verification = await verify_device_location_by_city(
+            phone_number=phone_number,
+            city=extracted_data.get("locality", ""),
+            country=extracted_data.get("country", "")
+        )
+        
+        print("Location Verification Result:", location_verification)
+        
 
     except Exception as e:
         print(f"Error: {e}")
