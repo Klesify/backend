@@ -25,13 +25,17 @@ class ResponseData(BaseModel):
     # Add other response fields
 
 
+@app.get("/")
+async def root():
+    return {"message": "Hello World"}
+
 @app.post("/")
 async def your_function(data: RequestData):
     """
     Your POST endpoint - define the function implementation here
     """
     # Your implementation here
-    return ResponseData(message="Success")
+    return {"message": "Success"}
 
 
 # This is needed for Vercel
