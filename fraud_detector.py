@@ -12,7 +12,7 @@ from mock_api.data_loader import (
     load_companies_data
 )
 from mock_api.location_verification import verify_device_location, verify_device_location_by_city
-from mock_api.kyc_match import verify_kyc_data, match_customer_data, calculate_name_similarity
+from mock_api.kyc_match import match_customer_data, calculate_name_similarity
 
 
 async def detect_fraud_from_audio(audio: str, caller_phone: str) -> Dict[str, Any]:
