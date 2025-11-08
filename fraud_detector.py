@@ -15,7 +15,7 @@ from mock_api.location_verification import verify_device_location, verify_device
 from mock_api.kyc_match import verify_kyc_data, match_customer_data, calculate_name_similarity
 
 
-async def detect_fraud_from_audio(audiu: str, caller_phone: str) -> Dict[str, Any]:
+async def detect_fraud_from_audio(audio: str, caller_phone: str) -> Dict[str, Any]:
     """
     Detect fraud from audio file by transcribing and analyzing the content.
     
@@ -29,8 +29,8 @@ async def detect_fraud_from_audio(audiu: str, caller_phone: str) -> Dict[str, An
     from extract_text_from_audio import transcribe_audio_blob
     
     # Step 1: Transcribe audio to text
-    print(f"Transcribing audio from: {audiu}")
-    call_text = transcribe_audio_blob(audiu, audio_format="wav", language="ro")
+    print(f"Transcribing audio from: {audio}")
+    call_text = transcribe_audio_blob(audio, audio_format="wav", language="ro")
     
     if not call_text:
         return {

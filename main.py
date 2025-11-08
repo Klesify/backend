@@ -1,6 +1,9 @@
+from urllib import response
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+
+from fraud_detector import detect_fraud_from_audio
 
 
 app = FastAPI()
@@ -16,8 +19,8 @@ app.add_middleware(
 
 
 class RequestData(BaseModel):
-    # Define your request model fields here
-    pass
+    audio: str  # Base64 encoded audio blob
+    phone_number: str
 
 
 class ResponseData(BaseModel):
@@ -34,8 +37,10 @@ async def your_function(data: RequestData):
     """
     Your POST endpoint - define the function implementation here
     """
+
+    response = await detect_fraud_from_audio(data.audio, data.phone_number)
     # Your implementation here
-    return {"message": "Success"}
+    return {"response": response}
 
 
 # This is needed for Vercel
